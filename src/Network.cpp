@@ -1,5 +1,4 @@
 #include "../include/Network.hpp"
-#include <iostream>
 
 Network::Network::Network(std::vector<int> t_topology) : m_topology{t_topology}
 { 
@@ -14,7 +13,7 @@ Network::Network::Network(std::vector<int> t_topology) : m_topology{t_topology}
         
         for (int k = 0; k < neuron_count; k++)
         {
-            Node *neuron = new Node(rand());
+            Node *neuron = new Node();
             neuron->connections() = last_layer;
             (*layer)[k] = neuron;
         }
