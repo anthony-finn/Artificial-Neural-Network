@@ -14,18 +14,27 @@ Network::Network::Network(std::vector<int> t_topology) : m_topology{t_topology}
         
         for (int k = 0; k < neuron_count; k++)
         {
-            Node *neuron = new Node();
+            Node *neuron = new Node(rand());
             neuron->connections() = last_layer;
             (*layer)[k] = neuron;
         }
 
         last_layer = layer;
     }
+
+    last_layer = nullptr;
 }
 
 Network::Network::~Network()
 {
-    std::cout << "Network destructor called" << std::endl;
+    for (int i = 0; i < this->m_layers.size(); i++)
+    {
+        for (int k = 0; k < this->m_layers[i]->size(); k++)
+        {
+            delete (*this->m_layers[i])[k];
+        }
+        delete this->m_layers[i];
+    }
 }
 
 std::vector<int> &Network::Network::topology()
