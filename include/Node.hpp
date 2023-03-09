@@ -2,7 +2,6 @@
 #define NODE_H
 
 #include <vector>
-#include <iostream>
 
 namespace Network 
 {

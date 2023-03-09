@@ -1,8 +1,10 @@
+#include <assert.h>
 #include "../include/Network.hpp"
-#include <iostream>
 
 Network::Network::Network(std::vector<int> t_topology) : m_topology{t_topology}
 { 
+    assert(t_topology.size() >= 2);
+
     int num_layers = this->m_topology.size();
     this->m_layers.reserve(num_layers);
     std::vector<Node *> last_layer;
