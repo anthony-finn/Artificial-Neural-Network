@@ -14,11 +14,31 @@ Network::Network::Network(std::vector<int> t_topology) : m_topology{t_topology}
         
         for (int k = 0; k < neuron_count; k++)
         {
-            Node * neuron = new Node();
+            Node *neuron = new Node();
             neuron->connections() = last_layer;
             layer[k] = neuron;
         }
 
         last_layer = layer;
     }
+}
+
+std::vector<int> &Network::Network::topology()
+{
+    return this->m_topology;
+}
+
+const std::vector<int> &Network::Network::topology() const
+{
+    return this->m_topology;
+}
+
+std::vector<std::vector<Network::Node *>> &Network::Network::layers()
+{
+    return this->m_layers;
+}
+
+const std::vector<std::vector<Network::Node *>> &Network::Network::layers() const
+{
+    return this->m_layers;
 }

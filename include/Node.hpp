@@ -21,10 +21,10 @@ namespace Network
         Node(double, std::vector<Node *>);
 
         // Accessors
-        double & collector();
-        const double & collector() const;
-        std::vector<Node *> & connections();
-        const std::vector<Node *> & connections() const;
+        double &collector();
+        const double &collector() const;
+        std::vector<Node *> &connections();
+        const std::vector<Node *> &connections() const;
     };
 }
 

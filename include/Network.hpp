@@ -15,6 +15,12 @@ namespace Network
     public:
         // Constructors
         Network(std::vector<int>);
+
+        // Accessors
+        std::vector<int> &topology();
+        const std::vector<int> &topology() const;
+        std::vector<std::vector<Node *>> &layers();
+        const std::vector<std::vector<Node *>> &layers() const;
     };
 }
 
