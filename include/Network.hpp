@@ -1,3 +1,6 @@
+#ifndef NETWORK_H
+#define NETWORK_H
+
 #include <vector>
 #include "Node.hpp"
 
@@ -14,3 +17,5 @@ namespace Network
         Network(std::vector<int>);
     };
 }
+
+#endif

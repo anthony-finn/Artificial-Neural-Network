@@ -2,6 +2,7 @@
 #define NODE_H
 
 #include <vector>
+#include <iostream>
 
 namespace Network 
 {
@@ -24,9 +25,6 @@ namespace Network
         const double & collector() const;
         std::vector<Node *> & connections();
         const std::vector<Node *> & connections() const;
-
-        // Functions
-        void addNode(Node *);
     };
 }
 

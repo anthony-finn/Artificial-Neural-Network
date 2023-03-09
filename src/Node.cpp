@@ -33,8 +33,3 @@ const std::vector<Network::Node *> & Network::Node::connections() const
 {
     return this->m_connections;
 }
-
-void Network::Node::addNode(Network::Node *t_node)
-{
-    this->m_connections.push_back(t_node);
-}
