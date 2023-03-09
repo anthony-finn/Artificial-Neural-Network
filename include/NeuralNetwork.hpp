@@ -10,7 +10,7 @@ namespace Network
     {
     private:
         std::vector<int> m_topology;
-        std::vector<std::vector<Node *> *> m_layers;
+        std::vector<std::vector<Node *>> m_layers;
 
     public:
         // Constructors
@@ -22,8 +22,8 @@ namespace Network
         // Accessors
         std::vector<int> &topology();
         const std::vector<int> &topology() const;
-        std::vector<std::vector<Node *> *> &layers();
-        const std::vector<std::vector<Node *> *> &layers() const;
+        std::vector<std::vector<Node *>> &layers();
+        const std::vector<std::vector<Node *>> &layers() const;
     };
 }
 
