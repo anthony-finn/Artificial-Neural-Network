@@ -1,6 +1,6 @@
-#include "../include/Network.hpp"
+#include "../include/NeuralNetwork.hpp"
 
-Network::Network::Network(std::vector<int> t_topology) : m_topology{t_topology}
+Network::NeuralNetwork::NeuralNetwork(std::vector<int> t_topology) : m_topology{t_topology}
 { 
     int num_layers = this->m_topology.size();
     this->m_layers.reserve(num_layers);
@@ -24,7 +24,7 @@ Network::Network::Network(std::vector<int> t_topology) : m_topology{t_topology}
     last_layer = nullptr;
 }
 
-Network::Network::~Network()
+Network::NeuralNetwork::~NeuralNetwork()
 {
     for (int i = 0; i < this->m_layers.size(); i++)
     {
@@ -38,22 +38,22 @@ Network::Network::~Network()
     }
 }
 
-std::vector<int> &Network::Network::topology()
+std::vector<int> &Network::NeuralNetwork::topology()
 {
     return this->m_topology;
 }
 
-const std::vector<int> &Network::Network::topology() const
+const std::vector<int> &Network::NeuralNetwork::topology() const
 {
     return this->m_topology;
 }
 
-std::vector<std::vector<Network::Node *> *> &Network::Network::layers()
+std::vector<std::vector<Network::Node *> *> &Network::NeuralNetwork::layers()
 {
     return this->m_layers;
 }
 
-const std::vector<std::vector<Network::Node *> *> &Network::Network::layers() const
+const std::vector<std::vector<Network::Node *> *> &Network::NeuralNetwork::layers() const
 {
     return this->m_layers;
 }

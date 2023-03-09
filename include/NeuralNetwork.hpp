@@ -6,7 +6,7 @@
 
 namespace Network 
 {
-    class Network
+    class NeuralNetwork
     {
     private:
         std::vector<int> m_topology;
@@ -14,10 +14,10 @@ namespace Network
 
     public:
         // Constructors
-        Network(std::vector<int>);
+        NeuralNetwork(std::vector<int>);
 
         // Destructor
-        ~Network();
+        ~NeuralNetwork();
 
         // Accessors
         std::vector<int> &topology();
