@@ -15,6 +15,7 @@ namespace Network
         // Constructors
         Node();
         Node(double);
+        Node(double, int);
         Node(std::vector<Node *>);
         Node(double, std::vector<Node *>);
 
@@ -23,6 +24,9 @@ namespace Network
         const double & collector() const;
         std::vector<Node *> & connections();
         const std::vector<Node *> & connections() const;
+
+        // Functions
+        void addNode(Node *);
     };
 }
 
