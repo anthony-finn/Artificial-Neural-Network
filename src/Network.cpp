@@ -31,8 +31,10 @@ Network::Network::~Network()
         for (int k = 0; k < this->m_layers[i]->size(); k++)
         {
             delete (*this->m_layers[i])[k];
+            (*this->m_layers[i])[k] = nullptr;
         }
         delete this->m_layers[i];
+        this->m_layers[i] = nullptr;
     }
 }
 
