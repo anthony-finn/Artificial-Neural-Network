@@ -3,21 +3,27 @@
 
 #include <vector>
 
-class Node
+namespace Network 
 {
-private:
-    double m_collector{0.0};
-    std::vector<Node *> m_connections;
+    class Node
+    {
+    private:
+        double m_collector{0.0};
+        std::vector<Node *> m_connections;
 
-public:
-    Node();
-    Node(double);
-    Node(double, std::vector<Node *>);
+    public:
+        // Constructors
+        Node();
+        Node(double);
+        Node(std::vector<Node *>);
+        Node(double, std::vector<Node *>);
 
-    double & collector();
-    const double & collector() const;
-    std::vector<Node *> & connections();
-    const std::vector<Node *> & connections() const;
-};
+        // Accessors
+        double & collector();
+        const double & collector() const;
+        std::vector<Node *> & connections();
+        const std::vector<Node *> & connections() const;
+    };
+}
 
 #endif
