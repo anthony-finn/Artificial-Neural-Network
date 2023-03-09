@@ -16,6 +16,9 @@ namespace Network
         // Constructors
         Network(std::vector<int>);
 
+        // Destructor
+        ~Network();
+
         // Accessors
         std::vector<int> &topology();
         const std::vector<int> &topology() const;

@@ -26,6 +26,11 @@ Network::Network::Network(std::vector<int> t_topology) : m_topology{t_topology}
     }
 }
 
+Network::Network::~Network()
+{
+    std::cout << "Network destructor called" << std::endl;
+}
+
 std::vector<int> &Network::Network::topology()
 {
     return this->m_topology;
