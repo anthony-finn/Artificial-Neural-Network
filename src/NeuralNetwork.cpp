@@ -1,8 +1,9 @@
 #include "../include/NeuralNetwork.hpp"
-#include <iostream>
 
 Network::NeuralNetwork::NeuralNetwork(std::vector<int> t_topology) : m_topology{t_topology}
 { 
+    assert(t_topology.size() >= 2);
+
     int num_layers = this->m_topology.size();
     for (int i = num_layers - 1; i >= 0; i--)
     {
@@ -43,4 +44,40 @@ std::vector<std::shared_ptr<Network::Node>> &Network::NeuralNetwork::nodes()
 const std::vector<std::shared_ptr<Network::Node>> &Network::NeuralNetwork::nodes() const
 {
     return this->m_nodes;
+}
+
+std::vector<double> Network::NeuralNetwork::getOutput(std::vector<double> input)
+{
+    std::vector<std::shared_ptr<Network::Node>> nodes = this->m_nodes;
+    std::vector<int> topology = this->m_topology;
+
+    int input_size = topology[0];
+
+    assert(input_size == input.size());
+
+    int num_nodes = nodes.size();
+    for (int i = 0; i < num_nodes; i++)
+    {
+        nodes[i]->collector() = 0;
+    }
+
+    for (int i = 0; i < input_size; i++)
+    {
+        nodes[nodes.size() - i - 1]->collector() = input[i];
+    }
+
+    for (int i = nodes.size() - 1; i >= 0; i--)
+    {
+        nodes[i]->propagate();
+    }
+    
+    int output_size = topology[topology.size() - 1];
+    std::vector<double> output(output_size);
+
+    for (int i = 0; i < output_size; i++)
+    {
+        output[i] = nodes[i]->collector();
+    }
+
+    return output;
 }
