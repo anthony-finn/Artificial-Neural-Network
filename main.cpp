@@ -15,20 +15,18 @@ int main(int argc, char **argv)
     
     // Read Neural Network Topology
     string inputs;
-    ifstream file("network_topology.csv");
-    while (getline(file, inputs, ','))
+    ifstream network_topology_file("network_topology.csv");
+    while (getline(network_topology_file, inputs, ','))
     {
         topology.push_back(stoi(inputs));
     }
 
     // Read Network Inputs
-    ifstream file("network_topology.csv");
-    while (getline(file, inputs, ','))
+    ifstream input_file("input.csv");
+    while (getline(input_file, inputs, ','))
     {
-        input.push_back(stoi(inputs));
+        input.push_back(stof(inputs));
     }
-
-    assert(input.size() == topology.size());
 
     Network::NeuralNetwork neural_network(topology);
     vector<double> outputs = neural_network.getOutput(input);
