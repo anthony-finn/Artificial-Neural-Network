@@ -14,17 +14,18 @@ int main(int argc, char **argv)
     vector<double> input;
     
     // Read Neural Network Topology
-    string layer_neurons;
+    string inputs;
     ifstream file("network_topology.csv");
-    while (getline(file, layer_neurons, ','))
+    while (getline(file, inputs, ','))
     {
-        topology.push_back(stoi(layer_neurons));
+        topology.push_back(stoi(inputs));
     }
 
-    // Read User Input
-    for (int i = 1; i < argc; i++)
+    // Read Network Inputs
+    ifstream file("network_topology.csv");
+    while (getline(file, inputs, ','))
     {
-        input.push_back(stof(argv[i]));
+        input.push_back(stoi(inputs));
     }
 
     assert(input.size() == topology.size());
