@@ -2,6 +2,7 @@
 #define NETWORK_H
 
 #include <vector>
+#include <memory>
 #include "Node.hpp"
 
 namespace Network 
@@ -10,20 +11,17 @@ namespace Network
     {
     private:
         std::vector<int> m_topology;
-        std::vector<std::vector<Node *>> m_layers;
+        std::vector<std::shared_ptr<Network::Node>> m_nodes;
 
     public:
         // Constructors
         NeuralNetwork(std::vector<int>);
 
-        // Destructor
-        ~NeuralNetwork();
-
         // Accessors
         std::vector<int> &topology();
         const std::vector<int> &topology() const;
-        std::vector<std::vector<Node *>> &layers();
-        const std::vector<std::vector<Node *>> &layers() const;
+        std::vector<std::shared_ptr<Network::Node>> &nodes();
+        const std::vector<std::shared_ptr<Network::Node>> &nodes() const;
     };
 }
 

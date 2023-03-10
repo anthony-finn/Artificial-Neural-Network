@@ -2,6 +2,8 @@
 #define NODE_H
 
 #include <vector>
+#include <memory>
+
 
 namespace Network 
 {
@@ -9,21 +11,23 @@ namespace Network
     {
     private:
         double m_collector{0.0};
-        std::vector<Node *> m_connections;
+        std::vector<std::shared_ptr<Node>> m_connections;
 
     public:
         // Constructors
         Node();
         Node(double);
-        Node(double, int);
-        Node(std::vector<Node *>);
-        Node(double, std::vector<Node *>);
+        Node(std::vector<std::shared_ptr<Node>>);
+        Node(double, std::vector<std::shared_ptr<Node>>);
 
         // Accessors
         double &collector();
         const double &collector() const;
-        std::vector<Node *> &connections();
-        const std::vector<Node *> &connections() const;
+        std::vector<std::shared_ptr<Node>> &connections();
+        const std::vector<std::shared_ptr<Node>> &connections() const;
+
+        // Functions
+        void propagate();
     };
 }
 
