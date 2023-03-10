@@ -65,10 +65,10 @@ std::vector<double> Network::NeuralNetwork::getOutput(std::vector<double> input)
 
     for (int i = 0; i < input_size; i++)
     {
-        nodes[nodes.size() - i - 1]->collector() = input[i];
+        nodes[num_nodes - i - 1]->collector() = input[i];
     }
 
-    for (int i = nodes.size() - 1; i >= 0; i--)
+    for (int i = num_nodes - 1; i >= 0; i--)
     {
         nodes[i]->propagate();
     }
