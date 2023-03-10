@@ -5,6 +5,7 @@ Network::NeuralNetwork::NeuralNetwork(std::vector<int> t_topology) : m_topology{
     assert(t_topology.size() >= 2);
 
     int num_layers = this->m_topology.size();
+    int num_nodes = this->m_nodes.size();
     for (int i = num_layers - 1; i >= 0; i--)
     {
         int neuron_count = this->m_topology[i];
@@ -17,11 +18,12 @@ Network::NeuralNetwork::NeuralNetwork(std::vector<int> t_topology) : m_topology{
             {
                 for (int j = 0; j < last_neuron_count; j++)
                 {
-                    node->connections().emplace_back(this->m_nodes[this->m_nodes.size() - k - j - 1]);
+                    node->connections().emplace_back(this->m_nodes[num_nodes - k - j - 1]);
                 }
             }
 
             this->m_nodes.emplace_back(node);
+            num_nodes++;
         }
     }
 }
