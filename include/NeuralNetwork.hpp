@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <assert.h>
+
 #include "Node.hpp"
 
 namespace Network 

@@ -4,7 +4,6 @@
 #include <vector>
 #include <memory>
 
-
 namespace Network 
 {
     class Node

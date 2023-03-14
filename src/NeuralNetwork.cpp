@@ -54,6 +54,7 @@ std::vector<double> Network::NeuralNetwork::getOutput(std::vector<double> input)
     std::vector<int> topology = this->m_topology;
 
     int input_size = topology[0];
+    int output_size = topology[topology.size() - 1];
 
     assert(input_size == input.size());
 
@@ -68,12 +69,11 @@ std::vector<double> Network::NeuralNetwork::getOutput(std::vector<double> input)
         nodes[num_nodes - i - 1]->collector() = input[i];
     }
 
-    for (int i = num_nodes - 1; i >= 0; i--)
+    for (int i = num_nodes - 1; i >= output_size; i--)
     {
         nodes[i]->propagate();
     }
     
-    int output_size = topology[topology.size() - 1];
     std::vector<double> output(output_size);
 
     for (int i = 0; i < output_size; i++)
