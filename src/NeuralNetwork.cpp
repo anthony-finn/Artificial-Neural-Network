@@ -5,7 +5,7 @@ Network::NeuralNetwork::NeuralNetwork(std::vector<int> t_topology) : m_topology{
     assert(t_topology.size() >= 2);
 
     int num_layers = this->m_topology.size();
-    int num_nodes = this->m_nodes.size();
+    int num_nodes = 0;
     for (int i = num_layers - 1; i >= 0; i--)
     {
         int neuron_count = this->m_topology[i];
