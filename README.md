@@ -8,5 +8,5 @@ Comma-separated values which define the structure of the neural network. The lef
 
 ## Build
 ```console
-g++ .\main.cpp .\src\Node.cpp .\src\NeuralNetwork.cpp
+./build.sh
 ```
