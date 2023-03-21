@@ -8,9 +8,12 @@
 A shell script is provided to build the required .cpp files.
 ```console
 ./build.sh
-./a.out
 ```
 Otherwise, you may build the software utilizing the following code.
 ```console
 g++ main.cpp src/Node.cpp src/NeuralNetwork.cpp
+```
+Then, run the executable.
+```console
+./a.out
 ```
