@@ -1,10 +1,8 @@
 # Artificial-Neural-Network
 
-## input.csv
-Comma-separated values which define the input for the neural network.
-
-## network_topology.csv
-Comma-separated values which define the structure of the neural network. The leftmost value is the input layer, and the rightmost value is the output layer.
+## Input Files
+* ```input.csv``` Comma-separated values which define the input for the neural network.
+* ```network_topology.csv``` Comma-separated values which define the structure of the neural network. The leftmost value is the input layer, and the rightmost value is the output layer.
 
 ## Build
 A shell script is provided to build the required .cpp files.
