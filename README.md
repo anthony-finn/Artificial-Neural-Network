@@ -8,6 +8,7 @@
 A shell script is provided to build the required .cpp files.
 ```console
 ./build.sh
+./a.out
 ```
 Otherwise, you may build the software utilizing the following code.
 ```console
