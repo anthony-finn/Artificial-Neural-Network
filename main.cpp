@@ -11,6 +11,7 @@ using namespace std;
 int main(int argc, char **argv)
 {
     vector<int> topology;
+    vector<Network::Node::Activation> activations;
     vector<double> input;
     
     // Read Neural Network Topology
@@ -21,6 +22,13 @@ int main(int argc, char **argv)
         topology.push_back(stod(inputs));
     }
 
+    // Read Neural Network Activations
+    ifstream network_activations("network_activations.csv");
+    while (getline(network_activations, inputs, ','))
+    {
+        activations.push_back(static_cast<Network::Node::Activation>(stoi(inputs)));
+    }
+    
     // Read Network Inputs
     ifstream input_file("input.csv");
     while (getline(input_file, inputs, ','))
@@ -28,7 +36,7 @@ int main(int argc, char **argv)
         input.push_back(stof(inputs));
     }
 
-    Network::NeuralNetwork neural_network(topology);
+    Network::NeuralNetwork neural_network(topology, activations);
     vector<double> outputs = neural_network.getOutput(input);
 
     for (int i = 0; i < outputs.size(); i++)
@@ -36,7 +44,6 @@ int main(int argc, char **argv)
         cout << fixed << "Output: " << outputs[i] << endl;
     }
 
-    //neural_network.save("model.txt");
-
+    neural_network.save("model.txt");
     return 0;
 }
