@@ -32,11 +32,21 @@ const std::vector<std::shared_ptr<Network::Node>> &Network::Node::connections() 
     return this->m_connections;
 }
 
+std::vector<double> &Network::Node::weights()
+{
+    return this->m_weights;
+}
+
+const std::vector<double> &Network::Node::weights() const
+{
+    return this->m_weights;
+}
+
 void Network::Node::propagate()
 {
     std::vector<std::shared_ptr<Network::Node>> connections = this->m_connections;
     for (int i = 0; i < connections.size(); i++)
     {
-        connections[i]->collector() += this->collector();
+        connections[i]->collector() += this->weights()[i] * this->collector();
     }
 }

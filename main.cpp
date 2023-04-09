@@ -18,7 +18,7 @@ int main(int argc, char **argv)
     ifstream network_topology_file("network_topology.csv");
     while (getline(network_topology_file, inputs, ','))
     {
-        topology.push_back(stoi(inputs));
+        topology.push_back(stod(inputs));
     }
 
     // Read Network Inputs
@@ -35,6 +35,8 @@ int main(int argc, char **argv)
     {
         cout << fixed << "Output: " << outputs[i] << endl;
     }
+
+    //neural_network.save("model.txt");
 
     return 0;
 }

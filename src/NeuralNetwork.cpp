@@ -1,30 +1,50 @@
 #include "../include/NeuralNetwork.hpp"
 
 Network::NeuralNetwork::NeuralNetwork(std::vector<int> t_topology) : m_topology{t_topology}
-{ 
-    assert(t_topology.size() >= 2);
+{
+    this->init(t_topology, std::vector<double>());
+}
 
-    int num_layers = this->m_topology.size();
-    int num_nodes = 0;
-    for (int i = num_layers - 1; i >= 0; i--)
+Network::NeuralNetwork::NeuralNetwork(std::vector<int> t_topology, std::vector<double> t_weights) : m_topology{t_topology}
+{
+    this->init(t_topology, t_weights);
+}
+
+Network::NeuralNetwork::NeuralNetwork(std::string input_path)
+{
+    std::ifstream input_file(input_path);
+
+    if (input_file.is_open())
     {
-        int neuron_count = this->m_topology[i];
-        int last_neuron_count = i == num_layers - 1 ? 0 : this->m_topology[i + 1];
-        for (int k = 0; k < neuron_count; k++)
+        // Topology
+        std::string topology_str;
+        std::getline(input_file, topology_str);
+        std::cout << topology_str << std::endl;
+        std::stringstream topology_ss(topology_str);
+        std::vector<int> topology;
+        std::string layer;
+        while (std::getline(topology_ss, layer, ','))
         {
-            std::shared_ptr<Network::Node> node(new Network::Node());
-
-            if (last_neuron_count > 0)
-            {
-                for (int j = 0; j < last_neuron_count; j++)
-                {
-                    node->connections().emplace_back(this->m_nodes[num_nodes - k - j - 1]);
-                }
-            }
-
-            this->m_nodes.emplace_back(node);
-            num_nodes++;
+            topology.push_back(std::stoi(layer));
         }
+
+        // Weights
+        std::string weights_str;
+        std::getline(input_file, weights_str);
+        std::cout << weights_str << std::endl;
+        std::stringstream weights_ss(weights_str);
+        std::vector<double> weights;
+        std::string weight;
+        while (std::getline(weights_ss, weight, ','))
+        {
+            weights.push_back(std::stod(weight));
+        }
+
+        // Create Class
+        this->m_topology = topology;
+        this->init(topology, weights);
+
+        input_file.close();
     }
 }
 
@@ -82,4 +102,86 @@ std::vector<double> Network::NeuralNetwork::getOutput(std::vector<double> input)
     }
 
     return output;
+}
+
+void Network::NeuralNetwork::save(std::string output_path) const
+{
+    std::ofstream output_file(output_path);
+
+    if (output_file.is_open())
+    {
+        std::vector<std::shared_ptr<Network::Node>> nodes = this->m_nodes;
+        std::vector<int> topology = this->m_topology;
+
+        // Save Topology
+        for (int i = 0; i < topology.size(); i++)
+        {
+            output_file << std::fixed << topology[i];
+
+            if (i + 1 < topology.size())
+            {
+                output_file << ",";
+            }
+        }
+
+        output_file << std::endl;
+
+        // Save Weights
+        int num_nodes = nodes.size();
+        for (int i = 0; i < num_nodes; i++)
+        {
+            std::shared_ptr<Network::Node> node = nodes[i];
+            std::vector<double> weights = node->weights();
+            for (int k = 0; k < weights.size(); k++)
+            {
+                output_file << std::fixed << weights[k];
+
+                if (i + 1 == num_nodes && k + 1 >= weights.size())
+                {
+                    break;
+                }
+
+                output_file << ",";
+            }
+        }
+
+        output_file.close();
+    }
+}
+
+void Network::NeuralNetwork::init(std::vector<int> t_topology, std::vector<double> t_weights)
+{
+    assert(t_topology.size() >= 2);
+
+    int num_layers = this->m_topology.size();
+    int num_nodes = 0;
+    int weight_idx = 0;
+    for (int i = num_layers - 1; i >= 0; i--)
+    {
+        int neuron_count = this->m_topology[i];
+        int last_neuron_count = i == num_layers - 1 ? 0 : this->m_topology[i + 1];
+        for (int k = 0; k < neuron_count; k++)
+        {
+            std::shared_ptr<Network::Node> node(new Network::Node());
+
+            if (last_neuron_count > 0)
+            {
+                for (int j = 0; j < last_neuron_count; j++)
+                {
+                    node->connections().emplace_back(this->m_nodes[num_nodes - k - j - 1]);
+                    if (t_weights.empty())
+                    {
+                        node->weights().push_back(1.0);
+                    }
+                    else
+                    {
+                        node->weights().push_back(t_weights[weight_idx++]);
+                    }
+                }
+            }
+
+            this->m_nodes.emplace_back(node);
+            num_nodes++;
+        }
+    }
 }

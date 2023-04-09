@@ -11,6 +11,7 @@ namespace Network
     private:
         double m_collector{0.0};
         std::vector<std::shared_ptr<Node>> m_connections;
+        std::vector<double> m_weights;
 
     public:
         // Constructors
@@ -24,6 +25,8 @@ namespace Network
         const double &collector() const;
         std::vector<std::shared_ptr<Node>> &connections();
         const std::vector<std::shared_ptr<Node>> &connections() const;
+        std::vector<double> &weights();
+        const std::vector<double> &weights() const;
 
         // Functions
         void propagate();
