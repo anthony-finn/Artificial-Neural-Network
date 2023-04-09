@@ -244,7 +244,7 @@ void Network::NeuralNetwork::init(std::vector<double> t_weights)
                     node->addConnection(this->m_nodes[num_nodes - k - j - 1]);
                     if (t_weights.empty())
                     {
-                        node->weights().push_back(1.0);
+                        node->weights().push_back(static_cast<double>(std::rand()) / RAND_MAX);
                     }
                     else
                     {
