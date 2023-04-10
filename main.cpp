@@ -1,5 +1,6 @@
 #include "include/Node.hpp"
 #include "include/NeuralNetwork.hpp"
+
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -7,18 +8,21 @@
 #include <ctime>
 #include <algorithm>
 #include <random>
+#include <assert.h>
 
 using namespace std;
 
 // Read NIST_19 Data located @ https://www.nist.gov/srd/nist-special-database-19
 // Normalize Data by converting grayscale 255 to 0-1.
-vector<vector<double>> load_nist_19_data()
+inline vector<vector<double>> load_nist_19_data()
 {
+    // Read data from handwritten NIST data.
     ifstream file("data/handwritten_data.csv", ios::binary | ios::ate);
     vector<vector<double>> data;
 
     if (file.is_open())
     {
+        // Load file into character buffer
         streamsize size = file.tellg();
         file.seekg(0, ios::beg);
 
@@ -27,6 +31,7 @@ vector<vector<double>> load_nist_19_data()
 
         file.close();
 
+        // Read file by line and parse data
         const char* end = buffer + size;
         const char* pos = buffer;
 
@@ -48,6 +53,8 @@ vector<vector<double>> load_nist_19_data()
                     ++value_pos;
                 }
 
+                // row[0] = Classification
+                // row[1-785] = Image Data from 0-255 scaled between 0-1
                 if (row.size() == 0)
                 {
                     row.push_back(value);
@@ -102,13 +109,36 @@ int main(int argc, char **argv)
     // Load data
     vector<vector<double>> data = load_nist_19_data();
     shuffle(data.begin(), data.end(), gen);
+    assert(data.size() > 0);
 
-    // Split Data into 80% Train and 20% Test
+    // Split data into 80% train and 20% test
     vector<vector<double>> x_train; vector<double> y_train;
     vector<vector<double>> x_test; vector<double> y_test;
     train_test_split(data, 0.8, x_train, y_train, x_test, y_test);
 
-    cout << x_train.size() << " " << x_test.size() << endl;
+    // Extract feature data
+    int input_size = x_train[0].size();
+
+    // Create Neural Network
+    Network::NeuralNetwork model(
+        vector<int> 
+        {
+            input_size,
+            512,
+            256,
+            128,
+            26
+        },
+        vector<Network::Node::Activation>
+        {
+            Network::Node::Activation::None,
+            Network::Node::Activation::ReLU,
+            Network::Node::Activation::ReLU,
+            Network::Node::Activation::ReLU,
+            Network::Node::Activation::Softmax
+        }
+    );
+
 
     return 0;
 }
