@@ -14,6 +14,11 @@
 * Tanh = 5
 * Swish = 6
 
+## Loss Functions
+* MSE = 0
+* BinaryCrossEntropy = 1
+* CategoricalCrossEntropy = 2
+
 ## Build
 A shell script is provided to build the required .cpp files.
 ```console
