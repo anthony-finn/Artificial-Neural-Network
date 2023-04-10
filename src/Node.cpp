@@ -1,5 +1,4 @@
 #include "../include/Node.hpp"
-#include <iostream>
 
 Network::Node::Node()
 { }

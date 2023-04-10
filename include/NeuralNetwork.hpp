@@ -48,7 +48,7 @@ namespace Network
 
         // Functions
         std::vector<double> getOutput(std::vector<double>);
-        double getLoss(std::vector<double>, std::vector<double>, Loss = MSE);
+        double getLoss(std::vector<double>, std::vector<double>, Loss);
         void save(std::string) const;
     };
 }
