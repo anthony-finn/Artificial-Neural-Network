@@ -36,7 +36,7 @@ int main(int argc, char **argv)
     ifstream input_file("input/input.csv");
     while (getline(input_file, inputs, ','))
     {
-        input.push_back(stof(inputs));
+        input.push_back(stod(inputs));
     }
 
     Network::NeuralNetwork neural_network(topology, activations);
@@ -46,6 +46,9 @@ int main(int argc, char **argv)
     {
         cout << fixed << "Output: " << outputs[i] << endl;
     }
+
+    double loss = neural_network.getLoss(outputs, std::vector<double>{0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, Network::NeuralNetwork::Loss::CategoricalCrossEntropy);
+    std::cout << fixed << "Loss: " << loss << std::endl;
 
     neural_network.save("model.txt");
     return 0;

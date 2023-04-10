@@ -11,6 +11,7 @@ namespace Network
     class Node : public std::enable_shared_from_this<Node>
     {
     public:
+        // Enums
         enum Activation
         {
             None,

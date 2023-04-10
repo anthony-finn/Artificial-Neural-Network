@@ -45,7 +45,7 @@ Network::NeuralNetwork::NeuralNetwork(std::string input_path)
         std::string activation;
         while (std::getline(activations_ss, activation, ','))
         {
-            activations.push_back((Node::Activation)std::stoi(activation));
+            activations.push_back(static_cast<Network::Node::Activation>(std::stoi(activation)));
         }
 
         // Weights
@@ -158,6 +158,44 @@ std::vector<double> Network::NeuralNetwork::getOutput(std::vector<double> input)
     }
 
     return output;
+}
+
+double Network::NeuralNetwork::getLoss(std::vector<double> output, std::vector<double> expected_output, Loss loss = Network::NeuralNetwork::MSE)
+{
+    int output_size = output.size();
+    assert(output_size == expected_output.size());
+
+    if (loss == Network::NeuralNetwork::MSE)
+    {
+        double sum = 0.0;
+        for (int i = 0; i < output_size; i++)
+        {
+            sum += std::pow(output[i] + expected_output[i], 2);
+        }
+        return sum / output_size;
+    }
+    else if (loss == Network::NeuralNetwork::Loss::BinaryCrossEntropy)
+    {
+        assert(output_size == 1);
+        
+        double y_true = expected_output[0];
+        double y_pred = output[0];
+        return -(y_true * std::log(y_pred) + (1 - y_true) * std::log(1 - y_pred));
+    }
+    else if (loss == Network::NeuralNetwork::Loss::CategoricalCrossEntropy)
+    {
+        double sum = 0.0;
+        for (int i = 0; i < output_size; i++)
+        {
+            double y_true = expected_output[i];
+            double y_pred = output[i];
+            sum += y_true * std::log(y_pred);
+        }
+        return -sum;
+    }
+
+    assert(loss >= Network::NeuralNetwork::Loss::MSE && loss <= Network::NeuralNetwork::Loss::CategoricalCrossEntropy);
+    return -1.0;
 }
 
 void Network::NeuralNetwork::save(std::string output_path) const

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <tuple>
 
 #include "Node.hpp"
 
@@ -22,6 +23,14 @@ namespace Network
 
         void init(std::vector<double>);
     public:
+        // Enums
+        enum Loss
+        {
+            MSE,
+            BinaryCrossEntropy,
+            CategoricalCrossEntropy,
+        };
+
         // Constructors
         NeuralNetwork(std::vector<int>);
         NeuralNetwork(std::vector<int>, std::vector<double>);
@@ -39,6 +48,7 @@ namespace Network
 
         // Functions
         std::vector<double> getOutput(std::vector<double>);
+        double getLoss(std::vector<double>, std::vector<double>, Loss = MSE);
         void save(std::string) const;
     };
 }
