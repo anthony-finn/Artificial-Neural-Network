@@ -19,7 +19,7 @@ namespace Network
     private:
         std::vector<int> m_topology;
         std::vector<Network::Node::Activation> m_layer_activations;
-        std::vector<std::shared_ptr<Network::Node>> m_nodes;
+        std::vector<Network::Node *> m_nodes;
 
         void init(std::vector<double>);
     public:
@@ -37,19 +37,21 @@ namespace Network
         NeuralNetwork(std::vector<int>, std::vector<Network::Node::Activation>);
         NeuralNetwork(std::vector<int>, std::vector<double>, std::vector<Network::Node::Activation>);
         NeuralNetwork(std::string);
+        ~NeuralNetwork();
 
         // Accessors
         std::vector<int> &topology();
         const std::vector<int> &topology() const;
         std::vector<Network::Node::Activation> &layer_activiations();
         const std::vector<Network::Node::Activation> &layer_activiations() const;
-        std::vector<std::shared_ptr<Network::Node>> &nodes();
-        const std::vector<std::shared_ptr<Network::Node>> &nodes() const;
+        std::vector<Network::Node *> &nodes();
+        const std::vector<Network::Node *> &nodes() const;
 
         // Functions
-        std::vector<double> getOutput(std::vector<double>);
-        double getLoss(std::vector<double>, std::vector<double>, Loss);
-        void save(std::string) const;
+        std::vector<double> getOutput(std::vector<double> &);
+        double getLoss(std::vector<double> &, std::vector<double> &, Loss);
+        void save(std::string);
+        double fit(std::vector<std::vector<double>>, std::vector<std::vector<double>>, std::vector<std::vector<double>>, std::vector<std::vector<double>>);
     };
 }
 

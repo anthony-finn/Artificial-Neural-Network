@@ -20,6 +20,18 @@ Network::NeuralNetwork::NeuralNetwork(std::vector<int> t_topology, std::vector<d
     this->init(t_weights);
 }
 
+Network::NeuralNetwork::~NeuralNetwork()
+{
+    std::vector<Network::Node *> *nodes = &this->nodes();
+    for (int i = 0; i < nodes->size(); i++)
+    {
+        delete (*nodes)[i];
+    }
+    
+    nodes->clear();
+    nodes->shrink_to_fit();
+}
+
 Network::NeuralNetwork::NeuralNetwork(std::string input_path)
 {
     std::ifstream input_file(input_path);
@@ -88,79 +100,50 @@ const std::vector<Network::Node::Activation> &Network::NeuralNetwork::layer_acti
     return this->m_layer_activations;
 }
 
-std::vector<std::shared_ptr<Network::Node>> &Network::NeuralNetwork::nodes()
+std::vector<Network::Node *> &Network::NeuralNetwork::nodes()
 {
     return this->m_nodes;
 }
 
-const std::vector<std::shared_ptr<Network::Node>> &Network::NeuralNetwork::nodes() const
+const std::vector<Network::Node *> &Network::NeuralNetwork::nodes() const
 {
     return this->m_nodes;
 }
 
-std::vector<double> Network::NeuralNetwork::getOutput(std::vector<double> input)
+std::vector<double> Network::NeuralNetwork::getOutput(std::vector<double> &input)
 {
-    std::vector<std::shared_ptr<Network::Node>> nodes = this->m_nodes;
-    std::vector<int> topology = this->m_topology;
-    std::vector<Node::Activation> activations = this->m_layer_activations;
+    std::vector<Network::Node *> *nodes = &this->nodes();
+    std::vector<int> *topology = &this->topology();
+    std::vector<Node::Activation> *activations = &this->layer_activiations();
 
-    int input_size = topology[0];
-    int output_size = topology[topology.size() - 1];
+    int input_size = (*topology)[0];
+    int output_size = (*topology)[topology->size() - 1];
 
     assert(input_size == input.size());
 
-    int num_nodes = nodes.size();
-    for (int i = 0; i < num_nodes; i++)
-    {
-        nodes[i]->collector() = 0;
-    }
-
+    int num_nodes = nodes->size();
     for (int i = 0; i < input_size; i++)
     {
-        nodes[num_nodes - i - 1]->collector() = input[i];
+        Network::Node *node = (*nodes)[num_nodes - i - 1];
+        node->collector() = input[i];
+        node->activate();
     }
 
-    int node_idx = num_nodes - 1;
-    for (int i = 0; i < topology.size(); i++)
+    for (int i = num_nodes - 1 - input_size; i >= 0; i--)
     {
-        int num_layer_nodes = topology[i];
-        Node::Activation activation = activations[i];
-        std::vector<std::shared_ptr<Network::Node>> layer_nodes;
-        double softmax_e_zj = 0.0;
-        
-        for (int k = 0; k < num_layer_nodes; k++)
-        {
-            std::shared_ptr<Network::Node> node = nodes[node_idx--];
-            node->propagate();
-
-            if (activation == Node::Activation::Softmax)
-            {
-                softmax_e_zj += std::exp(node->collector());
-            }
-
-            layer_nodes.emplace_back(node);
-        }
-
-        if (activation == Node::Activation::Softmax)
-        {
-            for (int k = 0; k < num_layer_nodes; k++)
-            {
-                layer_nodes[k]->collector() = (std::exp(layer_nodes[k]->collector()) / softmax_e_zj);
-            }
-        }
+        (*nodes)[i]->activate();
     }
     
     std::vector<double> output(output_size);
-
     for (int i = 0; i < output_size; i++)
     {
-        output[i] = nodes[i]->activate();
+        output[i] = (*nodes)[i]->collector();
     }
 
     return output;
 }
 
-double Network::NeuralNetwork::getLoss(std::vector<double> output, std::vector<double> expected_output, Loss loss = Network::NeuralNetwork::MSE)
+double Network::NeuralNetwork::getLoss(std::vector<double> &output, std::vector<double> &expected_output, Loss loss = Network::NeuralNetwork::MSE)
 {
     int output_size = output.size();
     assert(output_size == expected_output.size());
@@ -170,7 +153,7 @@ double Network::NeuralNetwork::getLoss(std::vector<double> output, std::vector<d
         double sum = 0.0;
         for (int i = 0; i < output_size; i++)
         {
-            sum += std::pow(output[i] + expected_output[i], 2);
+            sum += std::pow(expected_output[i] - output[i], 2);
         }
         return sum / output_size;
     }
@@ -194,26 +177,28 @@ double Network::NeuralNetwork::getLoss(std::vector<double> output, std::vector<d
         return -sum;
     }
 
-    assert(loss >= Network::NeuralNetwork::Loss::MSE && loss <= Network::NeuralNetwork::Loss::CategoricalCrossEntropy);
     return -1.0;
 }
 
-void Network::NeuralNetwork::save(std::string output_path) const
+void Network::NeuralNetwork::save(std::string output_path)
 {
     std::ofstream output_file(output_path);
 
     if (output_file.is_open())
     {
-        std::vector<std::shared_ptr<Network::Node>> nodes = this->m_nodes;
-        std::vector<Network::Node::Activation> activations = this->m_layer_activations;
-        std::vector<int> topology = this->m_topology;
+        std::vector<Network::Node *> *nodes = &this->nodes();
+        std::vector<int> *topology = &this->topology();
+        std::vector<Node::Activation> *activations = &this->layer_activiations();
+        int topology_size = topology->size();
+        int nodes_size = nodes->size();
+        int activations_size = activations->size();
 
         // Save Topology
-        for (int i = 0; i < topology.size(); i++)
+        for (int i = 0; i < topology_size; i++)
         {
-            output_file << std::fixed << topology[i];
+            output_file << std::fixed << (*topology)[i];
 
-            if (i + 1 < topology.size())
+            if (i + 1 < topology_size)
             {
                 output_file << ",";
             }
@@ -222,11 +207,11 @@ void Network::NeuralNetwork::save(std::string output_path) const
         output_file << std::endl;
 
         // Save Activations
-        for (int i = 0; i < activations.size(); i++)
+        for (int i = 0; i < activations_size; i++)
         {
-            output_file << std::fixed << activations[i];
+            output_file << std::fixed << (*activations)[i];
 
-            if (i + 1 < activations.size())
+            if (i + 1 < activations_size)
             {
                 output_file << ",";
             }
@@ -235,16 +220,16 @@ void Network::NeuralNetwork::save(std::string output_path) const
         output_file << std::endl;
 
         // Save Weights
-        int num_nodes = nodes.size();
-        for (int i = 0; i < num_nodes; i++)
+        for (int i = 0; i < nodes_size; i++)
         {
-            std::shared_ptr<Network::Node> node = nodes[i];
-            std::vector<double> weights = node->weights();
-            for (int k = 0; k < weights.size(); k++)
+            Network::Node *node = (*nodes)[i];
+            std::vector<double> *weights = &node->weights();
+            int weights_size = weights->size();
+            for (int k = 0; k < weights_size; k++)
             {
-                output_file << std::fixed << weights[k];
+                output_file << std::fixed << (*weights)[k];
 
-                if (i + 1 == num_nodes && k + 1 >= weights.size())
+                if (i + 1 == nodes_size && k + 1 >= weights_size)
                 {
                     break;
                 }
@@ -259,7 +244,9 @@ void Network::NeuralNetwork::save(std::string output_path) const
 
 void Network::NeuralNetwork::init(std::vector<double> t_weights)
 {
-    int num_layers = this->m_topology.size();
+    std::vector<int> *topology = &this->topology();
+    std::vector<Network::Node *> *nodes = &this->nodes();
+    int num_layers = topology->size();
 
     assert(num_layers >= 2);
 
@@ -267,22 +254,22 @@ void Network::NeuralNetwork::init(std::vector<double> t_weights)
     int weight_idx = 0;
     for (int i = num_layers - 1; i >= 0; i--)
     {
-        int neuron_count = this->m_topology[i];
-        Network::Node::Activation activation = this->m_layer_activations[i];
-        int last_neuron_count = i == num_layers - 1 ? 0 : this->m_topology[i + 1];
+        int neuron_count = (*topology)[i];
+        Network::Node::Activation activation = this->layer_activiations()[i];
+        int last_neuron_count = i == num_layers - 1 ? 0 : (*topology)[i + 1];
         for (int k = 0; k < neuron_count; k++)
         {
-            std::shared_ptr<Network::Node> node(new Network::Node());
+            Network::Node * node = new Network::Node();
             node->activation() = activation;
 
             if (last_neuron_count > 0)
             {
                 for (int j = 0; j < last_neuron_count; j++)
                 {
-                    node->addConnection(this->m_nodes[num_nodes - k - j - 1]);
+                    node->addConnection((*nodes)[num_nodes - k - j - 1]);
                     if (t_weights.empty())
                     {
-                        node->weights().push_back(static_cast<double>(std::rand()) / RAND_MAX);
+                        node->weights().push_back(0.5);
                     }
                     else
                     {
@@ -291,8 +278,13 @@ void Network::NeuralNetwork::init(std::vector<double> t_weights)
                 }
             }
 
-            this->m_nodes.emplace_back(node);
+            nodes->emplace_back(node);
             num_nodes++;
         }
     }
+}
+
+double Network::NeuralNetwork::fit(std::vector<std::vector<double>> x_train, std::vector<std::vector<double>> y_train, std::vector<std::vector<double>> x_test, std::vector<std::vector<double>> y_test)
+{
+    return 0.0;
 }

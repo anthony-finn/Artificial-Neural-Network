@@ -2,13 +2,12 @@
 #define NODE_H
 
 #include <vector>
-#include <memory>
 #include <cmath>
 #include <algorithm>
 
 namespace Network 
 {
-    class Node : public std::enable_shared_from_this<Node>
+    class Node
     {
     public:
         // Enums
@@ -17,8 +16,8 @@ namespace Network
             None,
             Sigmoid,
             ReLU,
-            LeakyReLU,
             Softmax,
+            LeakyReLU,
             Tanh,
             Swish
         };
@@ -27,36 +26,37 @@ namespace Network
         Node();
         Node(double);
         Node(Activation);
-        Node(std::vector<std::shared_ptr<Node>>);
+        Node(std::vector<Node *>);
         Node(double, Activation);
-        Node(double, std::vector<std::shared_ptr<Node>>);
-        Node(Activation, std::vector<std::shared_ptr<Node>>);
-        Node(double, Activation, std::vector<std::shared_ptr<Node>>);
+        Node(double, std::vector<Node *>);
+        Node(Activation, std::vector<Node *>);
+        Node(double, Activation, std::vector<Node *>);
 
         // Accessors
         double &collector();
         const double &collector() const;
-        std::vector<std::shared_ptr<Node>> &connections();
-        const std::vector<std::shared_ptr<Node>> &connections() const;
-        std::vector<std::shared_ptr<Node>> &back_connections();
-        const std::vector<std::shared_ptr<Node>> &back_connections() const;
+        std::vector<Node *> &connections();
+        const std::vector<Node *> &connections() const;
         std::vector<double> &weights();
         const std::vector<double> &weights() const;
         Activation &activation();
         const Activation &activation() const;
+        double &bias();
+        const double &bias() const;
 
         // Functions
-        void propagate();
-        double activate();
-        void addConnection(std::shared_ptr<Node>);
-        void removeConnection(std::shared_ptr<Node>);
+        void activate();
+        double transfer();
+        double transfer_derivative();
+        void addConnection(Node *);
+        void removeConnection(Node *);
 
     private:
         double m_collector{0.0};
-        std::vector<std::shared_ptr<Node>> m_connections;
-        std::vector<std::shared_ptr<Node>> m_back_connections;
+        std::vector<Node *> m_connections;
         std::vector<double> m_weights;
         Activation m_activation = None;
+        double m_bias{0.0};
     };
 }
 

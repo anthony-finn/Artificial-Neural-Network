@@ -1,4 +1,5 @@
 #include "../include/Node.hpp"
+#include <iostream>
 
 Network::Node::Node()
 { }
@@ -9,19 +10,19 @@ Network::Node::Node(double t_collector): m_collector{t_collector}
 Network::Node::Node(Activation t_activation): m_activation{t_activation}
 { }
 
-Network::Node::Node(std::vector<std::shared_ptr<Network::Node>> t_connections): m_connections{t_connections}
+Network::Node::Node(std::vector<Network::Node *> t_connections): m_connections{t_connections}
 { }
 
 Network::Node::Node(double t_collector, Activation t_activation): m_collector{t_collector}, m_activation{t_activation}
 { }
 
-Network::Node::Node(double t_collector, std::vector<std::shared_ptr<Network::Node>> t_connections) : m_collector{t_collector}, m_connections{t_connections}
+Network::Node::Node(double t_collector, std::vector<Network::Node *> t_connections) : m_collector{t_collector}, m_connections{t_connections}
 { }
 
-Network::Node::Node(Activation t_activation, std::vector<std::shared_ptr<Network::Node>> t_connections) : m_activation{t_activation}, m_connections{t_connections}
+Network::Node::Node(Activation t_activation, std::vector<Network::Node *> t_connections) : m_activation{t_activation}, m_connections{t_connections}
 { }
 
-Network::Node::Node(double t_collector, Activation t_activation, std::vector<std::shared_ptr<Network::Node>> t_connections) : m_collector{t_collector}, m_activation{t_activation}, m_connections{t_connections}
+Network::Node::Node(double t_collector, Activation t_activation, std::vector<Network::Node *> t_connections) : m_collector{t_collector}, m_activation{t_activation}, m_connections{t_connections}
 { }
 
 double &Network::Node::collector()
@@ -34,24 +35,14 @@ const double &Network::Node::collector() const
     return this->m_collector;
 }
 
-std::vector<std::shared_ptr<Network::Node>> &Network::Node::connections()
+std::vector<Network::Node *> &Network::Node::connections()
 {
     return this->m_connections;
 }
 
-const std::vector<std::shared_ptr<Network::Node>> &Network::Node::connections() const
+const std::vector<Network::Node *> &Network::Node::connections() const
 {
     return this->m_connections;
-}
-
-std::vector<std::shared_ptr<Network::Node>> &Network::Node::back_connections()
-{
-    return this->m_back_connections;
-}
-
-const std::vector<std::shared_ptr<Network::Node>> &Network::Node::back_connections() const
-{
-    return this->m_back_connections;
 }
 
 std::vector<double> &Network::Node::weights()
@@ -74,75 +65,90 @@ const Network::Node::Activation &Network::Node::activation() const
     return this->m_activation;
 }
 
-void Network::Node::propagate()
+double &Network::Node::bias()
 {
-    double node_output = this->activate();
+    return this->m_bias;
+}
+
+const double &Network::Node::bias() const
+{
+    return this->m_bias;
+}
+
+void Network::Node::activate()
+{
+    this->collector() = this->transfer();
         
-    if (this->activation() != Network::Node::Softmax)
+    std::vector<Network::Node *> *connections = &this->m_connections;
+    for (int i = 0; i < connections->size(); i++)
     {
-        std::vector<std::shared_ptr<Network::Node>> connections = this->m_connections;
-        for (int i = 0; i < connections.size(); i++)
-        {
-            connections[i]->collector() += this->weights()[i] * node_output;
-        }
+        (*connections)[i]->collector() += this->weights()[i] * this->collector();
     }
 }
 
-double Network::Node::activate()
+double Network::Node::transfer()
 {
     double collector = this->collector();
-    if (this->m_activation == None)
+    Network::Node::Activation activation = this->activation();
+
+    switch (activation)
     {
-        return collector;
-    }
-    else if (this->m_activation == Sigmoid)
-    {
-        return 1.0 / (1.0 + std::exp(-collector));
-    }
-    else if (this->m_activation == ReLU)
-    {
-        return std::max(0.0, collector);
-    }
-    else if (this->m_activation == LeakyReLU)
-    {
-        return std::max(0.1 * collector, collector);
-    }
-    else if (this->m_activation == Softmax)
-    {
-        // NOTE: Full Softmax activation is not applied yet, as we need to take into account for the whole layers outputs.
-        // We just calculate the e^collector, we we have the full outputs of the layers, then we divide by the sum of the e^collector for that layer.
-        return collector;
-    }
-    else if (this->m_activation == Tanh)
-    {
-        return (std::exp(collector) - std::exp(-collector)) / (std::exp(collector) + std::exp(-collector));
-    }
-    else if (this->m_activation == Swish)
-    {
-        return collector / (1.0 + std::exp(-collector));
-    }
+        case Network::Node::Activation::None:
+            return collector;
+        case Network::Node::Activation::Sigmoid:
+            return 1.0 / (1.0 + std::exp(-collector));
+        case Network::Node::Activation::ReLU:
+            return std::max(0.0, collector);
+        case Network::Node::Activation::LeakyReLU:
+            return std::max(0.1 * collector, collector);
+        case Network::Node::Activation::Tanh:
+            return (std::exp(collector) - std::exp(-collector)) / (std::exp(collector) + std::exp(-collector));
+        case Network::Node::Activation::Swish:
+            return collector / (1.0 + std::exp(-collector));
+    };
 
     return collector;
 }
 
-void Network::Node::addConnection(std::shared_ptr<Node> node)
+double Network::Node::transfer_derivative()
 {
-    this->connections().emplace_back(node);
-    node->back_connections().emplace_back(shared_from_this());
+    double collector = this->collector();
+    Network::Node::Activation activation = this->activation();
+
+    switch (activation)
+    {
+        case Network::Node::Activation::None:
+            return 0;
+        case Network::Node::Activation::Sigmoid:
+            return collector * (1.0 - collector);
+        case Network::Node::Activation::ReLU:
+            return collector > 0.0 ? 1.0 : 0.0;
+        case Network::Node::Activation::LeakyReLU:
+            return collector > 0.0 ? 1.0 : 0.1;
+        case Network::Node::Activation::Tanh:
+            return 4.0 / std::pow((std::exp(collector) + std::exp(-collector)), 2.0);
+        case Network::Node::Activation::Swish:
+            return (collector * std::exp(-collector) + 1 + std::exp(-collector)) / std::pow((1 + std::exp(-collector)), 2.0);
+    };
+
+    return collector;
 }
 
-void Network::Node::removeConnection(std::shared_ptr<Node> node)
+void Network::Node::addConnection(Network::Node *node)
 {
-    auto iter = std::remove(this->connections().begin(), this->connections().end(), node);
-    this->connections().erase(iter, this->connections().end());
+    this->connections().emplace_back(node);
+}
 
-    auto ptr_to_remove = std::find_if(node->back_connections().begin(), node->back_connections().end(), [this](const std::shared_ptr<Node>& ptr) 
+void Network::Node::removeConnection(Network::Node *node)
+{
+
+    auto ptr_to_remove = std::find_if(this->connections().begin(), this->connections().end(), [this](const Network::Node *ptr) 
     {
-        return ptr == shared_from_this();
+        return ptr == this;
     });
 
-    if (ptr_to_remove != node->back_connections().end())
+    if (ptr_to_remove != this->connections().end())
     {
-        node->back_connections().erase(ptr_to_remove);
+        this->connections().erase(ptr_to_remove);
     }
 }

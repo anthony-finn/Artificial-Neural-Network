@@ -76,7 +76,7 @@ inline vector<vector<double>> load_nist_19_data()
     return data;
 }
 
-inline void train_test_split(vector<vector<double>> data, double train_percent, vector<vector<double>> &x_train, vector<double> &y_train, vector<vector<double>> &x_test, vector<double> &y_test)
+inline void train_test_split(vector<vector<double>> &data, double train_percent, vector<vector<double>> &x_train, vector<double> &y_train, vector<vector<double>> &x_test, vector<double> &y_test)
 {
     const auto split_idx = static_cast<size_t>(data.size() * train_percent);
     vector<vector<double>> train_data(data.begin(), data.begin() + split_idx);
@@ -106,6 +106,7 @@ int main(int argc, char **argv)
     random_device rd;
     mt19937 gen(rd());
 
+    /*
     // Load data
     vector<vector<double>> data = load_nist_19_data();
     shuffle(data.begin(), data.end(), gen);
@@ -115,30 +116,30 @@ int main(int argc, char **argv)
     vector<vector<double>> x_train; vector<double> y_train;
     vector<vector<double>> x_test; vector<double> y_test;
     train_test_split(data, 0.8, x_train, y_train, x_test, y_test);
+    data.clear();
+    data.shrink_to_fit();
 
     // Extract feature data
+    int output_size = 1;
     int input_size = x_train[0].size();
+    */
 
     // Create Neural Network
     Network::NeuralNetwork model(
         vector<int> 
         {
-            input_size,
-            512,
-            256,
-            128,
-            26
+            4,
+            2,
+            1
         },
         vector<Network::Node::Activation>
         {
             Network::Node::Activation::None,
-            Network::Node::Activation::ReLU,
-            Network::Node::Activation::ReLU,
-            Network::Node::Activation::ReLU,
-            Network::Node::Activation::Softmax
+            Network::Node::Activation::Sigmoid,
+            Network::Node::Activation::Sigmoid
         }
     );
 
-
+    model.save("model.txt");
     return 0;
 }
