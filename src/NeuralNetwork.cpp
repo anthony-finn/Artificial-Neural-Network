@@ -110,7 +110,17 @@ const std::vector<Network::Node *> &Network::NeuralNetwork::nodes() const
     return this->m_nodes;
 }
 
-std::vector<double> Network::NeuralNetwork::getOutput(std::vector<double> &input)
+std::vector<std::vector<Network::Node *>> &Network::NeuralNetwork::layer_nodes()
+{
+    return this->m_layer_nodes;
+}
+
+const std::vector<std::vector<Network::Node *>> &Network::NeuralNetwork::layer_nodes() const
+{
+    return this->m_layer_nodes;
+}
+
+std::vector<double> Network::NeuralNetwork::get_output(std::vector<double> &input)
 {
     std::vector<Network::Node *> *nodes = &this->nodes();
     std::vector<int> *topology = &this->topology();
@@ -143,7 +153,7 @@ std::vector<double> Network::NeuralNetwork::getOutput(std::vector<double> &input
     return output;
 }
 
-double Network::NeuralNetwork::getLoss(std::vector<double> &output, std::vector<double> &expected_output, Loss loss = Network::NeuralNetwork::MSE)
+double Network::NeuralNetwork::get_loss(std::vector<double> &output, std::vector<double> &expected_output, Network::NeuralNetwork::Loss loss = Network::NeuralNetwork::MSE)
 {
     int output_size = output.size();
     assert(output_size == expected_output.size());
@@ -192,7 +202,6 @@ void Network::NeuralNetwork::save(std::string output_path)
         int topology_size = topology->size();
         int nodes_size = nodes->size();
         int activations_size = activations->size();
-
         // Save Topology
         for (int i = 0; i < topology_size; i++)
         {
@@ -246,6 +255,7 @@ void Network::NeuralNetwork::init(std::vector<double> t_weights)
 {
     std::vector<int> *topology = &this->topology();
     std::vector<Network::Node *> *nodes = &this->nodes();
+    std::vector<std::vector<Network::Node *>> node_layers;
     int num_layers = topology->size();
 
     assert(num_layers >= 2);
@@ -257,6 +267,7 @@ void Network::NeuralNetwork::init(std::vector<double> t_weights)
         int neuron_count = (*topology)[i];
         Network::Node::Activation activation = this->layer_activiations()[i];
         int last_neuron_count = i == num_layers - 1 ? 0 : (*topology)[i + 1];
+        std::vector<Network::Node *> layer_nodes;
         for (int k = 0; k < neuron_count; k++)
         {
             Network::Node * node = new Network::Node();
@@ -269,7 +280,7 @@ void Network::NeuralNetwork::init(std::vector<double> t_weights)
                     node->addConnection((*nodes)[num_nodes - k - j - 1]);
                     if (t_weights.empty())
                     {
-                        node->weights().push_back(0.5);
+                        node->weights().push_back(static_cast<double>(rand()) / RAND_MAX);
                     }
                     else
                     {
@@ -280,11 +291,87 @@ void Network::NeuralNetwork::init(std::vector<double> t_weights)
 
             nodes->emplace_back(node);
             num_nodes++;
+            layer_nodes.emplace_back(node);
+        }
+
+        node_layers.insert(node_layers.begin(), layer_nodes);
+    }
+
+    this->layer_nodes() = node_layers;
+}
+
+void Network::NeuralNetwork::back_propagate(std::vector<double> &expected_output)
+{
+    std::vector<int> *topology = &this->topology();
+    std::vector<std::vector<Network::Node *>> *layer_nodes = &this->layer_nodes();
+    double topology_size = topology->size();
+    for (int i = topology_size - 1; i >= 0; i--)
+    {
+        double layer_size = (*topology)[i];
+        std::vector<Network::Node *> *layer = &(*layer_nodes)[i];
+        std::vector<double> errors;
+        if (i != topology_size - 1)
+        {
+            for (int j = 0; j < layer_size; j++)
+            {
+                double error = 0.0;
+                Network::Node *node = (*layer)[j];
+                std::vector<Network::Node *> *next_layer = &(*layer_nodes)[i + 1];
+                for (int k = 0; k < next_layer->size(); k++)
+                {
+                    Network::Node *next_node = (*next_layer)[k];
+                    error += node->weights()[k] * next_node->delta();
+                }
+                errors.push_back(error);
+            }
+        }
+        else
+        {
+            for (int j = 0; j < layer_size; j++)
+            {
+                Network::Node *node = (*layer)[j];
+                errors.push_back(node->collector() - expected_output[j]);
+            }
+        }
+
+        for (int j = 0; j < layer_size; j++)
+        {
+            Network::Node *node = (*layer)[j];
+            node->delta() = errors[j] * node->transfer_derivative();
         }
     }
 }
 
-double Network::NeuralNetwork::fit(std::vector<std::vector<double>> x_train, std::vector<std::vector<double>> y_train, std::vector<std::vector<double>> x_test, std::vector<std::vector<double>> y_test)
+void Network::NeuralNetwork::update_weights(std::vector<double> &input, double learning_rate)
 {
-    return 0.0;
+    std::vector<int> *topology = &this->topology();
+    std::vector<std::vector<Network::Node *>> *layer_nodes = &this->layer_nodes();
+    double topology_size = topology->size();
+    for (int i = 1; i < topology_size; i++)
+    {
+        std::vector<Network::Node *> *layer = &(*layer_nodes)[i];
+        std::vector<Network::Node *> *last_layer = &(*layer_nodes)[i - 1];
+        std::vector<double> inputs;
+        if (i != 1)
+        {
+            for (int k = 0; k < last_layer->size(); k++)
+            {
+                inputs.push_back((*last_layer)[k]->collector());
+            }
+        } 
+        else
+        {
+            inputs = input;
+        }
+        
+        for (int k = 0; k < layer->size(); k++)
+        {
+            Network::Node *node = (*layer)[k];
+            for (int j = 0; j < inputs.size(); j++)
+            {
+                Network::Node *last_layer_node = (*last_layer)[j];
+                last_layer_node->weights()[k] -= learning_rate * node->delta() * inputs[j];
+            }
+        }
+    }
 }

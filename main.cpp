@@ -57,7 +57,7 @@ inline vector<vector<double>> load_nist_19_data()
                 // row[1-785] = Image Data from 0-255 scaled between 0-1
                 if (row.size() == 0)
                 {
-                    row.push_back(value);
+                    row.push_back(value == 1 ? 1 : 0);
                 }
                 else
                 {
@@ -109,6 +109,7 @@ int main(int argc, char **argv)
     /*
     // Load data
     vector<vector<double>> data = load_nist_19_data();
+    cout << "Loaded NIST-19 data" << endl;
     shuffle(data.begin(), data.end(), gen);
     assert(data.size() > 0);
 
@@ -118,6 +119,7 @@ int main(int argc, char **argv)
     train_test_split(data, 0.8, x_train, y_train, x_test, y_test);
     data.clear();
     data.shrink_to_fit();
+    cout << "Split NIST-19 data" << endl;
 
     // Extract feature data
     int output_size = 1;
@@ -125,6 +127,7 @@ int main(int argc, char **argv)
     */
 
     // Create Neural Network
+    cout << "Generating Neural Network" << endl;
     Network::NeuralNetwork model(
         vector<int> 
         {
@@ -134,12 +137,70 @@ int main(int argc, char **argv)
         },
         vector<Network::Node::Activation>
         {
-            Network::Node::Activation::None,
+            Network::Node::Activation::Sigmoid,
             Network::Node::Activation::Sigmoid,
             Network::Node::Activation::Sigmoid
         }
     );
 
-    model.save("model.txt");
+    vector<vector<double>> inputs = {
+        {0, 0, 0, 0},
+        {0, 0, 0, 1},
+        {0, 0, 1, 0},
+        {0, 0, 1, 1},
+        {0, 1, 0, 0},
+        {0, 1, 0, 1},
+        {0, 1, 1, 0},
+        {0, 1, 1, 1},
+        {1, 0, 0, 0},
+        {1, 0, 0, 1},
+        {1, 0, 1, 0},
+        {1, 0, 1, 1},
+        {1, 1, 0, 0},
+        {1, 1, 0, 1},
+        {1, 1, 1, 0},
+        {1, 1, 1, 1}    
+    };
+    
+    vector<double> expected_outputs = {
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,   
+        0,
+        0,
+        0,
+        1
+    };
+
+    cout << "Training Started" << endl;
+    int EPOCHS = 50;
+    double LEARNING_RATE = 0.1;
+    for (int i = 1; i <= EPOCHS; i++)
+    {
+        double sum_error = 0.0;
+        for (int k = 0; k < inputs.size(); k++)
+        {
+            vector<double> input = inputs[k];
+            vector<double> output = model.get_output(input);
+            vector<double> expected_output;
+            expected_output.push_back(expected_outputs[k]);
+            double loss = model.get_loss(output, expected_output, Network::NeuralNetwork::Loss::MSE);
+            sum_error += loss;
+            model.back_propagate(expected_output);
+            model.update_weights(input, LEARNING_RATE);
+        }
+
+        cout << "<epoch=" << i << "/" << EPOCHS << ", learning_rate=" << LEARNING_RATE << ", error=" << sum_error << endl;
+    }
+
     return 0;
 }

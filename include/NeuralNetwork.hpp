@@ -20,6 +20,7 @@ namespace Network
         std::vector<int> m_topology;
         std::vector<Network::Node::Activation> m_layer_activations;
         std::vector<Network::Node *> m_nodes;
+        std::vector<std::vector<Network::Node *>> m_layer_nodes;
 
         void init(std::vector<double>);
     public:
@@ -46,12 +47,15 @@ namespace Network
         const std::vector<Network::Node::Activation> &layer_activiations() const;
         std::vector<Network::Node *> &nodes();
         const std::vector<Network::Node *> &nodes() const;
+        std::vector<std::vector<Network::Node *>> &layer_nodes();
+        const std::vector<std::vector<Network::Node *>> &layer_nodes() const;
 
         // Functions
-        std::vector<double> getOutput(std::vector<double> &);
-        double getLoss(std::vector<double> &, std::vector<double> &, Loss);
+        std::vector<double> get_output(std::vector<double> &);
+        double get_loss(std::vector<double> &, std::vector<double> &, Loss);
         void save(std::string);
-        double fit(std::vector<std::vector<double>>, std::vector<std::vector<double>>, std::vector<std::vector<double>>, std::vector<std::vector<double>>);
+        void back_propagate(std::vector<double> &);
+        void update_weights(std::vector<double> &, double);
     };
 }
 

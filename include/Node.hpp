@@ -17,6 +17,7 @@ namespace Network
             Sigmoid,
             ReLU,
             Softmax,
+            Softplus,
             LeakyReLU,
             Tanh,
             Swish
@@ -43,6 +44,8 @@ namespace Network
         const Activation &activation() const;
         double &bias();
         const double &bias() const;
+        double &delta();
+        const double &delta() const;
 
         // Functions
         void activate();
@@ -57,6 +60,7 @@ namespace Network
         std::vector<double> m_weights;
         Activation m_activation = None;
         double m_bias{0.0};
+        double m_delta{0.0};
     };
 }
 

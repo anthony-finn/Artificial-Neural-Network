@@ -75,20 +75,31 @@ const double &Network::Node::bias() const
     return this->m_bias;
 }
 
+double &Network::Node::delta()
+{
+    return this->m_delta;
+}
+
+const double &Network::Node::delta() const
+{
+    return this->m_delta;
+}
+
 void Network::Node::activate()
 {
     this->collector() = this->transfer();
-        
-    std::vector<Network::Node *> *connections = &this->m_connections;
+    
+    std::vector<Network::Node *> *connections = &this->connections();
     for (int i = 0; i < connections->size(); i++)
     {
-        (*connections)[i]->collector() += this->weights()[i] * this->collector();
+        Network::Node *node = (*connections)[i];
+        node->collector() += this->weights()[i] * this->collector();
     }
 }
 
 double Network::Node::transfer()
 {
-    double collector = this->collector();
+    double collector = this->collector() + this->bias();
     Network::Node::Activation activation = this->activation();
 
     switch (activation)
@@ -101,8 +112,10 @@ double Network::Node::transfer()
             return std::max(0.0, collector);
         case Network::Node::Activation::LeakyReLU:
             return std::max(0.1 * collector, collector);
+        case Network::Node::Softplus:
+            return std::log(1 + std::exp(collector));
         case Network::Node::Activation::Tanh:
-            return (std::exp(collector) - std::exp(-collector)) / (std::exp(collector) + std::exp(-collector));
+            return std::tanh(collector);
         case Network::Node::Activation::Swish:
             return collector / (1.0 + std::exp(-collector));
     };
@@ -118,15 +131,17 @@ double Network::Node::transfer_derivative()
     switch (activation)
     {
         case Network::Node::Activation::None:
-            return 0;
+            return 1.0;
         case Network::Node::Activation::Sigmoid:
             return collector * (1.0 - collector);
         case Network::Node::Activation::ReLU:
             return collector > 0.0 ? 1.0 : 0.0;
         case Network::Node::Activation::LeakyReLU:
             return collector > 0.0 ? 1.0 : 0.1;
+        case Network::Node::Softplus:
+            return std::exp(collector) / (1 + std::exp(collector));
         case Network::Node::Activation::Tanh:
-            return 4.0 / std::pow((std::exp(collector) + std::exp(-collector)), 2.0);
+            return 1 - std::tanh(collector);
         case Network::Node::Activation::Swish:
             return (collector * std::exp(-collector) + 1 + std::exp(-collector)) / std::pow((1 + std::exp(-collector)), 2.0);
     };
