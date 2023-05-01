@@ -40,6 +40,8 @@ namespace Network
         const std::vector<Node *> &connections() const;
         std::vector<double> &weights();
         const std::vector<double> &weights() const;
+        std::vector<double> &delta_weights();
+        const std::vector<double> &delta_weights() const;
         Activation &activation();
         const Activation &activation() const;
         double &bias();
@@ -58,6 +60,7 @@ namespace Network
         double m_collector{0.0};
         std::vector<Node *> m_connections;
         std::vector<double> m_weights;
+        std::vector<double> m_delta_weights;
         Activation m_activation = None;
         double m_bias{0.0};
         double m_delta{0.0};

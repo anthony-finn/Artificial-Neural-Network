@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <tuple>
+#include <random>
 
 #include "Node.hpp"
 
@@ -22,7 +22,7 @@ namespace Network
         std::vector<Network::Node *> m_nodes;
         std::vector<std::vector<Network::Node *>> m_layer_nodes;
 
-        void init(std::vector<double>);
+        void init(std::vector<double>, std::vector<double>);
     public:
         // Enums
         enum Loss
@@ -53,9 +53,9 @@ namespace Network
         // Functions
         std::vector<double> get_output(std::vector<double> &);
         double get_loss(std::vector<double> &, std::vector<double> &, Loss);
+        double get_loss_derivative(std::vector<double> &, std::vector<double> &, Loss);
         void save(std::string);
-        void back_propagate(std::vector<double> &);
-        void update_weights(std::vector<double> &, double);
+        double train(std::vector<std::vector<double>> &, std::vector<std::vector<double>> &, int, double, Network::NeuralNetwork::Loss);
     };
 }
 

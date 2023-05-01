@@ -101,11 +101,6 @@ inline void train_test_split(vector<vector<double>> &data, double train_percent,
 
 int main(int argc, char **argv)
 {
-    // Random Seed
-    srand(time(nullptr));
-    random_device rd;
-    mt19937 gen(rd());
-
     /*
     // Load data
     vector<vector<double>> data = load_nist_19_data();
@@ -127,7 +122,6 @@ int main(int argc, char **argv)
     */
 
     // Create Neural Network
-    cout << "Generating Neural Network" << endl;
     Network::NeuralNetwork model(
         vector<int> 
         {
@@ -162,45 +156,52 @@ int main(int argc, char **argv)
         {1, 1, 1, 1}    
     };
     
-    vector<double> expected_outputs = {
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,   
-        0,
-        0,
-        0,
-        1
+    vector<vector<double>> expected_outputs = {
+        {0},
+        {0},
+        {0},
+        {0},
+        {0},
+        {0},
+        {0},
+        {0},
+        {0},
+        {0},
+        {0},
+        {0},
+        {0},
+        {0},
+        {0},
+        {1}
     };
 
-    cout << "Training Started" << endl;
-    int EPOCHS = 50;
-    double LEARNING_RATE = 0.1;
-    for (int i = 1; i <= EPOCHS; i++)
-    {
-        double sum_error = 0.0;
-        for (int k = 0; k < inputs.size(); k++)
-        {
-            vector<double> input = inputs[k];
-            vector<double> output = model.get_output(input);
-            vector<double> expected_output;
-            expected_output.push_back(expected_outputs[k]);
-            double loss = model.get_loss(output, expected_output, Network::NeuralNetwork::Loss::MSE);
-            sum_error += loss;
-            model.back_propagate(expected_output);
-            model.update_weights(input, LEARNING_RATE);
-        }
 
-        cout << "<epoch=" << i << "/" << EPOCHS << ", learning_rate=" << LEARNING_RATE << ", error=" << sum_error << endl;
+    for (int i = 0; i < inputs.size(); i++)
+    {
+        cout << "Before Input #" << i << ": " << fixed << model.get_output(inputs[i])[0] << endl;
     }
+
+    int BATCH_SIZE = 1;
+    double LEARNING_RATE = 0.1;
+    int EPOCHS = 100000;
+    double TARGET_LOSS = 0.1;
+    for (int i = 0; i < EPOCHS; i++)
+    {
+        double loss = model.train(inputs, expected_outputs, BATCH_SIZE, LEARNING_RATE, Network::NeuralNetwork::Loss::MSE);
+        std::cout << ">epoch=" << i << ", learning_rate=" << LEARNING_RATE << ", batch_size=" << BATCH_SIZE << ", loss=" << loss << std::endl;
+
+        if (loss <= TARGET_LOSS)
+        {
+            break;
+        }
+    }
+
+    for (int i = 0; i < inputs.size(); i++)
+    {
+        cout << "After Input #" << i << ": " << fixed << model.get_output(inputs[i])[0] << endl;
+    }
+
+    model.save("model.txt");
 
     return 0;
 }

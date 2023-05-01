@@ -1,5 +1,4 @@
 #include "../include/Node.hpp"
-#include <iostream>
 
 Network::Node::Node()
 { }
@@ -53,6 +52,16 @@ std::vector<double> &Network::Node::weights()
 const std::vector<double> &Network::Node::weights() const
 {
     return this->m_weights;
+}
+
+std::vector<double> &Network::Node::delta_weights()
+{
+    return this->m_delta_weights;
+}
+
+const std::vector<double> &Network::Node::delta_weights() const
+{
+    return this->m_delta_weights;
 }
 
 Network::Node::Activation &Network::Node::activation()
