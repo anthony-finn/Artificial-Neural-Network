@@ -9,7 +9,6 @@
 #include <fstream>
 #include <sstream>
 #include <random>
-
 #include "Node.hpp"
 
 namespace Network 
@@ -55,7 +54,7 @@ namespace Network
         double get_loss(std::vector<double> &, std::vector<double> &, Loss);
         double get_loss_derivative(std::vector<double> &, std::vector<double> &, Loss);
         void save(std::string);
-        double train(std::vector<std::vector<double>> &, std::vector<std::vector<double>> &, int, double, Network::NeuralNetwork::Loss);
+        double train(std::vector<std::vector<double>> &, std::vector<std::vector<double>> &, double, Network::NeuralNetwork::Loss);
     };
 }
 

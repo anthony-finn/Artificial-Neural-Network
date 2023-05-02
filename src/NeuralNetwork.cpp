@@ -353,141 +353,101 @@ void Network::NeuralNetwork::init(std::vector<double> t_weights, std::vector<dou
     this->layer_nodes() = node_layers;
 }
 
-double Network::NeuralNetwork::train(std::vector<std::vector<double>> &inputs, std::vector<std::vector<double>> &expected_outputs, int batch_size, double learning_rate, Network::NeuralNetwork::Loss loss = Network::NeuralNetwork::MSE)
+double Network::NeuralNetwork::train(std::vector<std::vector<double>> &inputs, std::vector<std::vector<double>> &expected_outputs, double learning_rate, Network::NeuralNetwork::Loss loss = Network::NeuralNetwork::MSE)
 {
     double total_loss = 0.0;
-    int num_remaining_input = inputs.size();
-    int num_batches = num_remaining_input / batch_size + (num_remaining_input % batch_size != 0);
+    int input_size = inputs.size();
     std::vector<Network::Node *> *nodes = &this->nodes();
     std::vector<int> *topology = &this->topology();
     std::vector<std::vector<Network::Node *>> *layer_nodes = &this->layer_nodes();
     double topology_size = topology->size();
     int num_nodes = nodes->size();
 
-    for (int x = 0; x < num_batches; x++)
+    for (int x = 0; x < input_size; x++)
     {
-        int num_remaining = std::min(batch_size, num_remaining_input);
+        std::vector<double> input = inputs[x];
+        std::vector<double> expected_output = expected_outputs[x];
 
-        for (int y = 0; y < num_remaining; y++)
+        // Forward Propagate
+        std::vector<double> output = this->get_output(input);
+        total_loss += this->get_loss(output, expected_output, loss);
+
+        // Calculate Deltas
+        for (int i = topology_size - 1; i >= 0; i--)
         {
-            int index = x * batch_size + y;
-            std::vector<double> input = inputs[index];
-            std::vector<double> expected_output = expected_outputs[index];
-
-            // Forward Propagate
-            std::vector<double> output = this->get_output(input);
-            total_loss += this->get_loss(output, expected_output, loss);
-
-            // Calculate Deltas
-            for (int i = topology_size - 1; i >= 0; i--)
+            double layer_size = (*topology)[i];
+            std::vector<Network::Node *> *layer = &(*layer_nodes)[i];
+            if (i != topology_size - 1)
             {
-                double layer_size = (*topology)[i];
-                std::vector<Network::Node *> *layer = &(*layer_nodes)[i];
-                if (i != topology_size - 1)
+                for (int j = 0; j < layer_size; j++)
                 {
-                    for (int j = 0; j < layer_size; j++)
+                    double error = 0.0;
+                    Network::Node *node = (*layer)[j];
+                    std::vector<Network::Node *> *next_layer = &(*layer_nodes)[i + 1];
+                    for (int k = 0; k < next_layer->size(); k++)
                     {
-                        double error = 0.0;
-                        Network::Node *node = (*layer)[j];
-                        std::vector<Network::Node *> *next_layer = &(*layer_nodes)[i + 1];
-                        for (int k = 0; k < next_layer->size(); k++)
-                        {
-                            Network::Node *next_node = (*next_layer)[k];
-                            error += node->weights()[k] * next_node->delta();
-                        }
+                        Network::Node *next_node = (*next_layer)[k];
+                        error += node->weights()[k] * next_node->delta();
+                    }
                         
-                        node->delta() = node->transfer_derivative() * error;
-                    }
-                }
-                else
-                {
-                    for (int j = 0; j < layer_size; j++)
-                    {
-                        Network::Node *node = (*layer)[j];
-                        node->delta() = node->transfer_derivative() * (expected_output[j] - node->collector());
-                    }
+                     node->delta() = node->transfer_derivative() * error;
                 }
             }
-            
-            // Calculate Weights
-            for (int i = 1; i < topology_size; i++)
+            else
             {
-                std::vector<Network::Node *> *layer = &(*layer_nodes)[i];
-                std::vector<Network::Node *> *last_layer = &(*layer_nodes)[i - 1];
-                std::vector<double> inputs;
-                double layer_size = layer->size();
-                double last_layer_size = last_layer->size();
-                
-                if (i != 1)
-                {
-                    for (int k = 0; k < last_layer_size; k++)
-                    {
-                        inputs.push_back((*last_layer)[k]->collector());
-                    }
-                } 
-                else
-                {
-                    inputs = input;
-                }
-                    
-                for (int j = 0; j < last_layer_size; j++)
-                {
-                    double input_j = inputs[j];
-                    Network::Node *node = (*last_layer)[j];
-
-                    for (int k = 0; k < layer_size; k++)
-                    {
-                        double delta_weight = learning_rate * (*layer)[layer_size - k - 1]->delta() * input_j;
-
-                        if (batch_size > 1)
-                        {
-                            node->delta_weights()[k] += delta_weight;
-                        }
-                        else
-                        {
-                            node->weights()[k] += delta_weight;
-                        }
-                    }
-                }
-            }
-
-            // Calculate Biases
-            for (int i = 0; i < topology_size; i++)
-            {
-                std::vector<Network::Node *> *layer = &(*layer_nodes)[i];
-                double layer_size = layer->size();
-
                 for (int j = 0; j < layer_size; j++)
                 {
                     Network::Node *node = (*layer)[j];
-                    node->bias() += learning_rate * node->delta();
+                    node->delta() = node->transfer_derivative() * (expected_output[j] - node->collector());
                 }
             }
         }
-
-        // Calculate Weights (Batch)
-        if (num_remaining > 1)
+        
+        // Calculate Weights
+        for (int i = 1; i < topology_size; i++)
         {
-            for (int i = 1; i < topology_size; i++)
+            std::vector<Network::Node *> *layer = &(*layer_nodes)[i];
+            std::vector<Network::Node *> *last_layer = &(*layer_nodes)[i - 1];
+            std::vector<double> inputs;
+            double layer_size = layer->size();
+            double last_layer_size = last_layer->size();
+                
+            if (i != 1)
             {
-                std::vector<Network::Node *> *layer = &(*layer_nodes)[i];
-                std::vector<Network::Node *> *last_layer = &(*layer_nodes)[i - 1];
-                double layer_size = layer->size();
-                double last_layer_size = last_layer->size();  
-                for (int j = 0; j < last_layer_size; j++)
+                for (int k = 0; k < last_layer_size; k++)
                 {
-                    Network::Node *node = (*last_layer)[j];
+                    inputs.push_back((*last_layer)[k]->collector());
+                }
+            } 
+            else
+            {
+                inputs = input;
+            }
+                
+            for (int j = 0; j < last_layer_size; j++)
+            {
+                double input_j = inputs[j];
+                Network::Node *node = (*last_layer)[j];
 
-                    for (int k = 0; k < layer_size; k++)
-                    {
-                        node->weights()[k] = node->delta_weights()[k] / (double)num_remaining;
-                        node->delta_weights()[k] = 0.0;
-                    }
+                for (int k = 0; k < layer_size; k++)
+                {
+                    node->weights()[k] += learning_rate * (*layer)[layer_size - k - 1]->delta() * input_j;
                 }
             }
         }
 
-        num_remaining_input -= batch_size;
+        // Calculate Biases
+        for (int i = 0; i < topology_size; i++)
+        {
+            std::vector<Network::Node *> *layer = &(*layer_nodes)[i];
+            double layer_size = layer->size();
+
+            for (int j = 0; j < layer_size; j++)
+            {
+                Network::Node *node = (*layer)[j];
+                node->bias() += learning_rate * node->delta();
+            }
+        }
     }
 
     return total_loss;

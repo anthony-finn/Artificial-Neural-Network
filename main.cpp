@@ -8,6 +8,7 @@
 #include <ctime>
 #include <algorithm>
 #include <random>
+#include <iomanip>
 #include <assert.h>
 
 using namespace std;
@@ -57,7 +58,7 @@ inline vector<vector<double>> load_nist_19_data()
                 // row[1-785] = Image Data from 0-255 scaled between 0-1
                 if (row.size() == 0)
                 {
-                    row.push_back(value == 1 ? 1 : 0);
+                    row.push_back(value == 4 ? 1 : 0);
                 }
                 else
                 {
@@ -76,7 +77,7 @@ inline vector<vector<double>> load_nist_19_data()
     return data;
 }
 
-inline void train_test_split(vector<vector<double>> &data, double train_percent, vector<vector<double>> &x_train, vector<double> &y_train, vector<vector<double>> &x_test, vector<double> &y_test)
+inline void train_test_split(vector<vector<double>> &data, double train_percent, vector<vector<double>> &x_train,  vector<vector<double>> &y_train, vector<vector<double>> &x_test,  vector<vector<double>> &y_test)
 {
     const auto split_idx = static_cast<size_t>(data.size() * train_percent);
     vector<vector<double>> train_data(data.begin(), data.begin() + split_idx);
@@ -85,7 +86,7 @@ inline void train_test_split(vector<vector<double>> &data, double train_percent,
     for (const vector<double> &vec : train_data)
     {
         vector<double> x(vec.begin() + 1, vec.end());
-        double y = vec[0];
+        vector<double> y(1, vec[0]);
         x_train.push_back(x);
         y_train.push_back(y);
     }
@@ -93,7 +94,7 @@ inline void train_test_split(vector<vector<double>> &data, double train_percent,
     for (const vector<double> &vec : test_data)
     {
         vector<double> x(vec.begin() + 1, vec.end());
-        double y = vec[0];
+        vector<double> y(1, vec[0]);
         x_test.push_back(x);
         y_test.push_back(y);
     }
@@ -101,107 +102,95 @@ inline void train_test_split(vector<vector<double>> &data, double train_percent,
 
 int main(int argc, char **argv)
 {
-    /*
     // Load data
+    std::random_device random_device{};
+    std::mt19937 gen{random_device()};
     vector<vector<double>> data = load_nist_19_data();
     cout << "Loaded NIST-19 data" << endl;
     shuffle(data.begin(), data.end(), gen);
     assert(data.size() > 0);
 
     // Split data into 80% train and 20% test
-    vector<vector<double>> x_train; vector<double> y_train;
-    vector<vector<double>> x_test; vector<double> y_test;
-    train_test_split(data, 0.8, x_train, y_train, x_test, y_test);
+    vector<vector<double>> x_train;  vector<vector<double>> y_train;
+    vector<vector<double>> x_test;  vector<vector<double>> y_test;
+    train_test_split(data, 0.000268528464018, x_train, y_train, x_test, y_test); // 0.00268528464018
     data.clear();
     data.shrink_to_fit();
-    cout << "Split NIST-19 data" << endl;
+    x_test.resize(100);
+    y_test.resize(100);
 
     // Extract feature data
     int output_size = 1;
     int input_size = x_train[0].size();
-    */
+    cout << "# Datapoints: " << x_train.size() << endl;
 
     // Create Neural Network
     Network::NeuralNetwork model(
         vector<int> 
         {
-            4,
-            2,
-            1
+            input_size,
+            800,
+            128,
+            64,
+            10,
+            output_size
         },
         vector<Network::Node::Activation>
         {
+            Network::Node::Activation::Sigmoid,
+            Network::Node::Activation::Sigmoid,
+            Network::Node::Activation::Sigmoid,
             Network::Node::Activation::Sigmoid,
             Network::Node::Activation::Sigmoid,
             Network::Node::Activation::Sigmoid
         }
     );
 
-    vector<vector<double>> inputs = {
-        {0, 0, 0, 0},
-        {0, 0, 0, 1},
-        {0, 0, 1, 0},
-        {0, 0, 1, 1},
-        {0, 1, 0, 0},
-        {0, 1, 0, 1},
-        {0, 1, 1, 0},
-        {0, 1, 1, 1},
-        {1, 0, 0, 0},
-        {1, 0, 0, 1},
-        {1, 0, 1, 0},
-        {1, 0, 1, 1},
-        {1, 1, 0, 0},
-        {1, 1, 0, 1},
-        {1, 1, 1, 0},
-        {1, 1, 1, 1}    
-    };
-    
-    vector<vector<double>> expected_outputs = {
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {1}
-    };
-
-
-    for (int i = 0; i < inputs.size(); i++)
-    {
-        cout << "Before Input #" << i << ": " << fixed << model.get_output(inputs[i])[0] << endl;
-    }
-
-    int BATCH_SIZE = 1;
     double LEARNING_RATE = 0.1;
-    int EPOCHS = 100000;
-    double TARGET_LOSS = 0.1;
+    int EPOCHS = 500;
     for (int i = 0; i < EPOCHS; i++)
     {
-        double loss = model.train(inputs, expected_outputs, BATCH_SIZE, LEARNING_RATE, Network::NeuralNetwork::Loss::MSE);
-        std::cout << ">epoch=" << i << ", learning_rate=" << LEARNING_RATE << ", batch_size=" << BATCH_SIZE << ", loss=" << loss << std::endl;
-
-        if (loss <= TARGET_LOSS)
-        {
-            break;
-        }
-    }
-
-    for (int i = 0; i < inputs.size(); i++)
-    {
-        cout << "After Input #" << i << ": " << fixed << model.get_output(inputs[i])[0] << endl;
+        double loss = model.train(x_train, y_train, LEARNING_RATE, Network::NeuralNetwork::Loss::MSE);
+        cout << fixed << ">epoch=" << i << ", learning_rate=" << LEARNING_RATE << ", loss=" << loss << endl;
     }
 
     model.save("model.txt");
+
+    // Compute Training Accuracy
+    int correct = 0;
+    for (int i = 0; i < x_train.size(); i++)
+    {
+        double predicted = model.get_output(x_train[i])[0];
+        double expected = y_train[i][0];
+
+        if (predicted > 0.5 && expected == 1)
+        {
+            correct++;
+        }
+        else if (predicted <= 0.5 && expected == 0)
+        {
+            correct ++;
+        }
+    }
+    cout << fixed << "Training Accuracy: " << (double)correct / (double)x_train.size() << "%" << endl;
+
+    // Compute Test Accuracy
+    int correct_test = 0;
+    for (int i = 0; i < x_test.size(); i++)
+    {
+        double predicted = model.get_output(x_test[i])[0];
+        double expected = y_train[i][0];
+
+        if (predicted > 0.5 && expected == 1)
+        {
+            correct++;
+        }
+        else if (predicted <= 0.5 && expected == 0)
+        {
+            correct ++;
+        }
+    }
+    cout << fixed << "Test Accuracy: " << (double)correct_test / (double)x_test.size() << "%" << endl;
 
     return 0;
 }
